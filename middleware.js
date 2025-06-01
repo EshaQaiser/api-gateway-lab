@@ -1,22 +1,24 @@
 import { NextResponse } from 'next/server';
 
-export function middleware(req) {
-  const { pathname } = req.nextUrl;
+export function middleware(request) {
+  const token = request.headers.get('authorization');
 
-  // Only run middleware on specific route
-  if (pathname.startsWith('/api/secure-data')) {
-    const token = req.headers.get('authorization');
+  // ✅ Logging request path
+  console.log("Request received at:", request.nextUrl.pathname);
 
-    // ❌ If token is invalid or missing, redirect
-    if (token !== 'Bearer mysecrettoken') {
-      return NextResponse.redirect(new URL('/unauthorized', req.url));
+  if (request.nextUrl.pathname === '/api/secure-data') {
+    if (token === 'Bearer mysecrettoken') {
+      return NextResponse.next();
+    } else {
+      // ✅ Redirecting to error page instead of 401 response
+      return NextResponse.redirect(new URL('/unauthorized', request.url));
     }
   }
 
-  // ✅ Allow request to continue
   return NextResponse.next();
 }
 
+// Match only the secure route
 export const config = {
-  matcher: ['/api/secure-data'],
+  matcher: '/api/secure-data',
 };
